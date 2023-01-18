@@ -26,8 +26,8 @@ def on_progress(chunk: bytes, file_handler: BinaryIO, bytes_remaining: int):
 	bar = ''
 	bar += '\033[2K\r'
 
-	progress_bar_completed_color = f'\033[90m'
-	progress_bar_not_completed_color = f'\033[2m'
+	progress_bar_completed_color = f'\033[91m'
+	progress_bar_not_completed_color = f'\033[0;2m'
 	unit_color = f'\033[2m'
 	
 	characters_completed = int(bytes_downloaded / audio_num_bytes * progress_bar_length)
