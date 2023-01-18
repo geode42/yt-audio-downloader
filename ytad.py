@@ -84,7 +84,8 @@ except pytube.exceptions.LiveStreamError:
 
 # Add a slash if there isn't one already
 if platform.system() == 'Windows':
-	if len(OUTPUT_LOCATION) > 0 and not (OUTPUT_LOCATION.endswith('/') or OUTPUT_LOCATION.endswith('\\')):
+	OUTPUT_LOCATION = OUTPUT_LOCATION.replace('/', '\\')
+	if len(OUTPUT_LOCATION) > 0 and not OUTPUT_LOCATION.endswith('\\'):
 		OUTPUT_LOCATION += '\\'
 else:
 	if len(OUTPUT_LOCATION) > 0 and not OUTPUT_LOCATION.endswith('/'):
