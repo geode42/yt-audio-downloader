@@ -17,12 +17,14 @@ if len(url) == 11: url = 'v=' + url # pytube requires the url to be at least v=v
 
 
 progress_bar_length = None
+initial_seconds_left_length = None
 def on_progress(chunk: bytes, file_handler: BinaryIO, bytes_remaining: int):
-	global progress_bar_length
+	global progress_bar_length, initial_seconds_left_length
 	bytes_downloaded = audio_num_bytes - bytes_remaining
 	seconds_left = round((time() - start_time) / bytes_downloaded * (audio_num_bytes - bytes_downloaded))
 	if not progress_bar_length:
 		progress_bar_length = shutil.get_terminal_size((10, 20)).columns - len('100%  ') - len(f'  {seconds_left} seconds')
+		initial_seconds_left_length = len(str(seconds_left))
 	bar = ''
 	bar += '\033[2K\r'
 
@@ -45,10 +47,11 @@ def on_progress(chunk: bytes, file_handler: BinaryIO, bytes_remaining: int):
 	else:  # Normal
 		bar += progress_bar_completed_color + '―' * characters_completed + ' ' + progress_bar_not_completed_color + '―' * (progress_bar_length - characters_completed - 1)
 	
+	before_seconds_left_padding = ' ' * (initial_seconds_left_length - len(str(seconds_left)))  # If seconds_left is initially 20, and now it's 5, an extra space should be added
 	if seconds_left > 1:
-		bar += f'  \033[0m{seconds_left} {unit_color}seconds'
+		bar += f'  {before_seconds_left_padding}\033[0m{seconds_left} {unit_color}seconds'
 	else:
-		bar += f'  \033[0m{seconds_left} {unit_color}second'
+		bar += f'  {before_seconds_left_padding}\033[0m{seconds_left} {unit_color}second'
 
 	print(bar + '\033[0m', end='')
 
