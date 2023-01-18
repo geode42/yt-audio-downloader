@@ -15,9 +15,14 @@ OUTPUT_LOCATION = expanduser('~/Downloads')
 url = pyperclip.paste()
 if len(url) == 11: url = 'v=' + url # pytube requires the url to be at least v=vid_id, I think the vid_id should be enough though
 
+
+progress_bar_length = None
 def on_progress(chunk: bytes, file_handler: BinaryIO, bytes_remaining: int):
+	global progress_bar_length
 	bytes_downloaded = audio_num_bytes - bytes_remaining
-	PROGRESS_BAR_LENGTH = shutil.get_terminal_size((10, 20)).columns - 6 - 11
+	seconds_left = round((time() - start_time) / bytes_downloaded * (audio_num_bytes - bytes_downloaded))
+	if not progress_bar_length:
+		progress_bar_length = shutil.get_terminal_size((10, 20)).columns - len('100%  ') - len(f'  {seconds_left} seconds')
 	bar = ''
 	bar += '\033[2K\r'
 
@@ -25,23 +30,25 @@ def on_progress(chunk: bytes, file_handler: BinaryIO, bytes_remaining: int):
 	progress_bar_not_completed_color = f'\033[2m'
 	unit_color = f'\033[2m'
 	
-	characters_completed = int(bytes_downloaded / audio_num_bytes * PROGRESS_BAR_LENGTH)
+	characters_completed = int(bytes_downloaded / audio_num_bytes * progress_bar_length)
 	percent_completed = int(bytes_downloaded / audio_num_bytes * 100)
 	
-	time_left = round((time() - start_time) / bytes_downloaded * (audio_num_bytes - bytes_downloaded))
 
 
 	bar += f'{percent_completed}{unit_color}%'.rjust(4 + len(unit_color)) + '  '
 
 	bar += '\033[1m'
 	if characters_completed == 0:
-		bar += progress_bar_not_completed_color + '―' * PROGRESS_BAR_LENGTH
-	elif characters_completed >= PROGRESS_BAR_LENGTH - 1:
-		bar += progress_bar_completed_color + '―' * characters_completed + ' ' * (PROGRESS_BAR_LENGTH - characters_completed)
+		bar += progress_bar_not_completed_color + '―' * progress_bar_length
+	elif characters_completed >= progress_bar_length - 1:
+		bar += progress_bar_completed_color + '―' * characters_completed + ' ' * (progress_bar_length - characters_completed)
 	else:  # Normal
-		bar += progress_bar_completed_color + '―' * characters_completed + ' ' + progress_bar_not_completed_color + '―' * (PROGRESS_BAR_LENGTH - characters_completed - 1)
+		bar += progress_bar_completed_color + '―' * characters_completed + ' ' + progress_bar_not_completed_color + '―' * (progress_bar_length - characters_completed - 1)
 	
-	bar += f'  \033[0m{time_left} {unit_color}seconds'
+	if seconds_left > 1:
+		bar += f'  \033[0m{seconds_left} {unit_color}seconds'
+	else:
+		bar += f'  \033[0m{seconds_left} {unit_color}second'
 
 	print(bar + '\033[0m', end='')
 
@@ -89,12 +96,12 @@ filename = audiostream.default_filename
 try:
 	start_time = time()
 	print(CLEARLINESTRING + 'downloading...', end='')
-	audiostream.download(OUTPUT_LOCATION, filename + '.webm')
+	audiostream.download(OUTPUT_LOCATION, filename)
 
-	if isfile(OUTPUT_LOCATION + filename + '.webm'):
-		print(f'\033[2K\rVideo downloaded at {OUTPUT_LOCATION + filename + ".webm"}')
+	if isfile(OUTPUT_LOCATION + filename):
+		print(f'\033[2K\rVideo downloaded at {OUTPUT_LOCATION + filename}')
 	else:
 		print(f'Video could not be downloaded')
 
 except KeyboardInterrupt:
-	print('\033[2K\rKeyboard Interrupt, canceling download...')
+	print('\033[2K\rKeyboard Interrupt, download cancelled')
